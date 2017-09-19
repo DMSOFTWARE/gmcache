@@ -1,0 +1,140 @@
+Полезные ссылки:
+
+http://mapbuilder.by.ru/gm.htm
+http://opensourcegis.org/
+http://www.ibm.com/developerworks/ru/library/j-coordconvert/index.html
+http://www.astrolab.ru/cgi-bin/sdg.cgi
+http://www.navgeocom.ru/support/figura/index.htm
+http://budetinteresno.narod.ru/karta/112.htm
+http://docs.google.com/View?docid=dcmn9ngg_16c32ccmpf
+http://forum.ru-board.com/topic.cgi?forum=5&topic=18419&start=180
+http://forum.ixbt.com/topic.cgi?id=45:9949
+http://forum.ixbt.com/topic.cgi?id=24:33909
+http://www.fallingrain.com/world/
+http://www.webkuehn.de/hobbys/wikipedia/geokoordinaten/index_en.htm
+http://download.geonames.org/export/dump/
+http://www.navgeocom.ru/support/nmea/index.htm
+
+http://mapnav.spb.ru/site/index.php
+
+http://www.palowireless.com/infotooth/tutorial/rfcomm.asp
+http://pratyeka.org/rfcomm/
+http://www.opennet.ru/base/sys/bluetooth_pan.txt.html
+http://www.opennet.ru/base/modem/debian_toshiba.txt.html
+
+http://www.insidepro.com/kk/126/126r.shtml
+
+
+Процедура сборки:
+
+1) Устанавливаем OPAM
+
+2) Устанавливаем дополнительные компоненты
+
+3) Собираем проект (prefix может быть и другой):
+
+# ./configure /opt/gmcache
+# make opt
+
+4) Инсталлируем проект в систему:
+
+# make install
+
+5) Подготавливаем директорию для кеширования
+изображений. В настоящее время используется плоская 
+модель кеша.
+
+Например:
+
+# mkdir /home/maps/maps
+# chown your-user /home/maps
+
+6) Настраиваем конфигурационный. Необходимо указать
+путь к хранилищу изображений и вбить http-cookie,
+оставленные сервером google.com. Подсмотреть
+их можно в своём браузере. Также желательно
+задать фейковый User-Agent. Думаю лучше всего
+задать такой же как в браузере, тогда запросы
+от gmcache и от браузера будут слабо отличаться,
+и меньше вызывать подозрений со стороны 
+keyhole-сервера.
+
+# vi ~/.gmcache
+
+7) Запускаем gmcache:
+
+$ /opt/gmcache/bin/gmcache
+
+8) Использование прокси-серверов.
+
+Для того чтобы использовать какой-либо
+HTTP-proxy сервер необходимо перед запуском
+gmcache экспортировать переменную окружения
+http_proxy, например:
+
+$ export http_proxy=http://localhost:3128
+
+Настройка GPS-приемника (минимально необходимые действия).
+
+Подключение модулей bluetooth,bnep,rfcomm,l2cap,hci_usb.
+Демона hcid должен быть настроен и запущен.
+
+# hciconfig -a
+
+hci0:   Type: USB
+        BD Address: 00:16:41:26:08:11 ACL MTU: 1017:8 SCO MTU: 64:8
+        UP RUNNING PSCAN ISCAN AUTH ENCRYPT 
+        RX bytes:450359 acl:20385 sco:0 events:3445 errors:0
+        TX bytes:13567 acl:665 sco:0 commands:317 errors:0
+        Features: 0xff 0xff 0x8d 0xfe 0x9b 0xf9 0x00 0x80
+        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3 
+        Link policy: RSWITCH HOLD SNIFF PARK 
+        Link mode: SLAVE ACCEPT 
+        Name: 'hp-nc6320'
+        Class: 0x080100
+        Service Classes: Capturing
+        Device Class: Computer, Uncategorized
+        HCI Ver: 2.0 (0x3) HCI Rev: 0x204a LMP Ver: 2.0 (0x3) LMP Subver: 0x4176
+        Manufacturer: Broadcom Corporation (15)
+
+# vi /etc/bluetooth/hdi.conf (http://www.opennet.ru/base/sys/bluetooth_pan.txt.html)
+
+# hcitool scan
+Scanning ...
+        00:1A:75:AF:DA:6C       SE-750
+        00:0D:B5:A0:04:87       BT-821
+
+# passkey-agent --default 0000
+Passkey request for device 00:0D:B5:A0:04:87
+Passkey request for device 00:1A:75:AF:DA:6C
+
+# hcitool info 00:0D:B5:A0:04:87
+Requesting information ...
+        BD Address:  00:0D:B5:A0:04:87
+        Device Name: BT-821
+        LMP Version: 1.2 (0x2) LMP Subversion: 0x0
+        Manufacturer: MediaTek, Inc. (70)
+        Features: 0xff 0xff 0x8d 0xf8 0x1b 0x18 0x00 0x80
+                <3-slot packets> <5-slot packets> <encryption> <slot offset> 
+                <timing accuracy> <role switch> <hold mode> <sniff mode> 
+                <park state> <RSSI> <channel quality> <SCO link> <HV2 packets> 
+                <HV3 packets> <u-law log> <A-law log> <CVSD> <power control> 
+                <transparent SCO> <broadcast encrypt> <enhanced iscan> 
+                <interlaced iscan> <interlaced pscan> <inquiry with RSSI> 
+                <extended SCO> <EV4 packets> <EV5 packets> <AFH cap. slave> 
+                <AFH class. slave> <AFH cap. master> <AFH class. master> 
+                <extended features> 
+        Extended features: 2 pages
+
+# rfcomm hci0 00:0D:B5:A0:04:87
+# ls -la /dev/rfcomm0
+# cat /dev/rfcomm0
+
+Где 00:0D:B5:A0:04:87 - это
+адрес GPS-приемника.
+
+Ошибки обычно сыпятся в /var/log/messages.log, 
+либо /var/log/daemon.log.
+
+На время паринга необходимо запускать passkey-agent
+с pin-кодом GPS-приемника, обычно 0000.

@@ -1,0 +1,34 @@
+#!/bin/sh -e
+#
+# This is configure script for generate Makefile.config
+#
+
+OS=`uname`
+CONFIG=Makefile.config
+
+make_prefix_configuration () {
+    printf "PREFIX=%s\n" $1 > $CONFIG
+}
+
+usage () {
+    echo "Usage: ./configure [prefix-directory]"
+    echo ""
+    echo "By default prefix-directory is /usr/local."
+    exit 1
+}
+
+if [ "x$@" = "x-h" ] || [ "x$@" = "x-help" ] || [ "x$@" = "x--help" ]; then
+    usage
+fi
+
+if [ "x$@" = "x" ]; then
+    make_prefix_configuration /usr/local
+else
+    DIR=`dirname $1`
+    if [ -d $DIR ]; then
+	make_prefix_configuration $1
+    else
+	usage
+    fi
+fi
+
